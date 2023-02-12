@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -71,14 +72,17 @@ func main() {
 	}
 	time.Sleep(3 * time.Second)
 
-	for i := 0; i < 33; i++ {
+	numLoops := flag.Int("n", 33, "Number of searches")
+	flag.Parse()
+	fmt.Printf("Searching %d times\n", *numLoops)
+	for i := 0; i < *numLoops; i++ {
 		locator, err := page.Locator("#sb_form_q")
 		if err != nil {
 			log.Fatal()
 		}
 		sentence := gofakeit.Sentence(numBetween(12, 44))
 		locator.Fill(sentence)
-		fmt.Printf("Search #%d: %s\n", i, sentence)
+		fmt.Printf("Search #%d: %s\n", i+1, sentence)
 		if err = page.Keyboard().Press("Enter"); err != nil {
 			log.Fatalf("could not press key: %v", err)
 		}

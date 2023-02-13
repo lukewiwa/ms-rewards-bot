@@ -24,7 +24,7 @@ func getEnv(key, fallback string) string {
 	return value
 }
 
-func main() {
+func setupPlaywright() (playwright.BrowserContext, func(), error) {
 	pw, err := playwright.Run()
 	if err != nil {
 		log.Fatalf("could not start playwright: %v", err)
@@ -42,6 +42,25 @@ func main() {
 	if err != nil {
 		log.Fatalf("Couldn't launch browser")
 	}
+	cleanup := func() {
+		fmt.Println("Cleaning up browser")
+		if err = browser.Close(); err != nil {
+			log.Fatalf("could not close browser: %v", err)
+		}
+		if err = pw.Stop(); err != nil {
+			log.Fatalf("could not stop Playwright: %v", err)
+		}
+	}
+	return browser, cleanup, err
+}
+
+func main() {
+
+	browser, cleanup, err := setupPlaywright()
+	if err != nil {
+		log.Fatalf("Couldn't set up browser %v", err)
+	}
+	defer cleanup()
 
 	page, err := browser.NewPage()
 	if err != nil {
@@ -78,7 +97,7 @@ func main() {
 	for i := 0; i < *numLoops; i++ {
 		locator, err := page.Locator("#sb_form_q")
 		if err != nil {
-			log.Fatal()
+			log.Fatalf("Could not find element %v", err)
 		}
 		sentence := gofakeit.Sentence(numBetween(12, 44))
 		locator.Fill(sentence)
@@ -89,10 +108,4 @@ func main() {
 		time.Sleep(time.Duration(numBetween(3000, 6000)) * time.Millisecond)
 	}
 
-	if err = browser.Close(); err != nil {
-		log.Fatalf("could not close browser: %v", err)
-	}
-	if err = pw.Stop(); err != nil {
-		log.Fatalf("could not stop Playwright: %v", err)
-	}
 }

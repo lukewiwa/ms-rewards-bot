@@ -43,13 +43,14 @@ func setupPlaywright() (playwright.BrowserContext, func(), error) {
 		log.Fatalf("Couldn't launch browser")
 	}
 	cleanup := func() {
-		fmt.Println("Cleaning up browser")
-		if err = browser.Close(); err != nil {
-			log.Fatalf("could not close browser: %v", err)
-		}
-		if err = pw.Stop(); err != nil {
-			log.Fatalf("could not stop Playwright: %v", err)
-		}
+		defer func() {
+			fmt.Println("Cleaning up browser")
+			browser.Close()
+		}()
+		defer func() {
+			fmt.Println("Cleaning up playwright")
+			pw.Stop()
+		}()
 	}
 	return browser, cleanup, err
 }
